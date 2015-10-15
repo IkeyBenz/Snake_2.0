@@ -47,6 +47,7 @@ class MainScene: CCNode {
         pieceArray.insert(newPiece, atIndex: 0)
         addChild(newPiece)
     }
+    // Hello
     override func touchBegan(touch: CCTouch!, withEvent event: CCTouchEvent!) {
         if CGRectContainsPoint(ball.boundingBox(), touch.locationInWorld()) {
             ball.position = touch.locationInWorld()
