@@ -2,14 +2,16 @@ import Foundation
 
 class MainScene: CCNode {
     var pieceArray: [CCNode] = []
-    var desiredRotation: Float = 44
+    var desiredRotation: Float = 3.14159
+    var pieceRotation: Float = 130
     weak var ball: CCSprite!
     weak var base: CCSprite!
     
     func didLoadFromCCB() {
         loadInitialPiece()
         userInteractionEnabled = true
-       // schedule("makeSnakeMove", interval: 0.5)
+        schedule("makeSnakeMove", interval: 0.09)
+        schedule("addSnakePiece", interval: 1)
     }
     
     func loadInitialPiece() {
@@ -18,52 +20,36 @@ class MainScene: CCNode {
         addChild(piece)
         pieceArray.insert(piece, atIndex: 0)
     }
-    func xComponent() -> Float {
-        if desiredRotation <= 90 || desiredRotation <= 360 && desiredRotation > 270 {
-            return Float(0)
-        }
-        return Float(180)
-    }
-    func positiveOrNegativeX(number: Float) -> Float {
-        if desiredRotation > 270 && desiredRotation < 360 || desiredRotation > 0 && desiredRotation < 90 {
-            return -number
-        } else {
-            return number
-        }
-    }
-    func positiveOrNegativeY(number: Float) -> Float {
-        if desiredRotation < 180 && desiredRotation > 0 {
-            return -number
-        } else {
-            return number
-        }
-    }
-    func findNewPosition(currentPosition: CGPoint, movementAngle: Float) -> CGPoint {
+    func findNewPosition(currentPosition: CGPoint) -> CGPoint {
         var newPosition: CGPoint!
-        let y = 15 * sin(movementAngle)
-        let x = 15 * cos(movementAngle)
-        print(positiveOrNegativeX(x), positiveOrNegativeY(y))
+        let y = 15 * sin(desiredRotation)
+        let x = 15 * cos(desiredRotation)
         
-        
-        newPosition = ccp(CGFloat(Float(currentPosition.x) + positiveOrNegativeX(x)), CGFloat(Float(currentPosition.y) + positiveOrNegativeY(y)))
+        newPosition = ccp(CGFloat(Float(currentPosition.x) - x), CGFloat(Float(currentPosition.y) - y))
         print(newPosition)
         return newPosition
     }
     func makeSnakeMove() {
         let lastPiece: CCNode = pieceArray[pieceArray.count - 1]
         let newPiece = CCBReader.load("Piece")
-        let newPosition = findNewPosition(pieceArray[0].position, movementAngle: abs(xComponent() - desiredRotation))
+        let newPosition = findNewPosition(pieceArray[0].position)
         newPiece.position = newPosition
-        newPiece.rotation = desiredRotation - 90
+        newPiece.rotation = pieceRotation
         removeChild(lastPiece)
         pieceArray.removeAtIndex(pieceArray.indexOf(lastPiece)!)
         addChild(newPiece)
         pieceArray.insert(newPiece, atIndex: 0)
     }
+    func addSnakePiece() {
+        let newPiece = CCBReader.load("Piece")
+        newPiece.position = findNewPosition(pieceArray[0].position)
+        newPiece.rotation = pieceRotation
+        pieceArray.insert(newPiece, atIndex: 0)
+        addChild(newPiece)
+    }
     override func touchBegan(touch: CCTouch!, withEvent event: CCTouchEvent!) {
-        
-        if !CGRectContainsPoint(base.boundingBox(), touch.locationInNode(self)) {
-            makeSnakeMove()
+        if CGRectContainsPoint(ball.boundingBox(), touch.locationInWorld()) {
+            ball.position = touch.locationInWorld()
         }
     }
     override func touchMoved(touch: CCTouch!, withEvent event: CCTouchEvent!) {
@@ -71,8 +57,8 @@ class MainScene: CCNode {
         let v = CGVector(dx: location.x - base.position.x, dy: location.y - base.position.y)
         let angle = atan2(v.dy, v.dx)
         let degrees = angle * CGFloat(180 / M_PI)
-        print(degrees + 180)
-        desiredRotation = Float(degrees + 180)
+        pieceRotation = -Float(degrees + 180)
+        desiredRotation = Float(angle + 3.14159)
         
         let length: CGFloat = base.boundingBox().height / 2
         let xDist: CGFloat = sin(angle - 1.57079633) * length
