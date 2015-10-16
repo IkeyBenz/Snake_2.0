@@ -4,14 +4,24 @@ class MainScene: CCNode {
     var pieceArray: [CCNode] = []
     var desiredRotation: Float = 3.14159
     var pieceRotation: Float = 130
+    
+    let screenWidth = CCDirector.sharedDirector().viewSize().width
+    let screenHeight = CCDirector.sharedDirector().viewSize().height
+    
+    let fruitPiece = CCBReader.load("Piece")
     weak var ball: CCSprite!
     weak var base: CCSprite!
     
     func didLoadFromCCB() {
         loadInitialPiece()
         userInteractionEnabled = true
-        schedule("makeSnakeMove", interval: 0.09)
-        schedule("addSnakePiece", interval: 1)
+        fruitPiece.position = ccp(CGFloat(arc4random_uniform(UInt32(screenWidth))), CGFloat(arc4random_uniform(UInt32(screenHeight))))
+        addChild(fruitPiece)
+        schedule("makeSnakeMove", interval: 0.1)
+        
+    }
+    override func update(delta: CCTime) {
+        snakeAteFruit()
     }
     
     func loadInitialPiece() {
@@ -26,7 +36,6 @@ class MainScene: CCNode {
         let x = 15 * cos(desiredRotation)
         
         newPosition = ccp(CGFloat(Float(currentPosition.x) - x), CGFloat(Float(currentPosition.y) - y))
-        print(newPosition)
         return newPosition
     }
     func makeSnakeMove() {
@@ -47,11 +56,17 @@ class MainScene: CCNode {
         pieceArray.insert(newPiece, atIndex: 0)
         addChild(newPiece)
     }
-    // Hello
-    override func touchBegan(touch: CCTouch!, withEvent event: CCTouchEvent!) {
-        if CGRectContainsPoint(ball.boundingBox(), touch.locationInWorld()) {
-            ball.position = touch.locationInWorld()
+    func snakeAteFruit() {
+        if CGRectIntersectsRect(pieceArray[0].boundingBox(), fruitPiece.boundingBox()) {
+            addSnakePiece()
+            fruitPiece.position = ccp(CGFloat(arc4random_uniform(UInt32(screenWidth))), CGFloat(arc4random_uniform(UInt32(screenHeight))))
         }
+    }
+    override func touchBegan(touch: CCTouch!, withEvent event: CCTouchEvent!) {
+        base.position = touch.locationInWorld()
+        ball.position = touch.locationInWorld()
+        base.visible = true
+        ball.visible = true
     }
     override func touchMoved(touch: CCTouch!, withEvent event: CCTouchEvent!) {
         let location = touch.locationInNode(self)
@@ -75,6 +90,10 @@ class MainScene: CCNode {
     override func touchEnded(touch: CCTouch!, withEvent event: CCTouchEvent!) {
         let move = CCActionMoveTo(duration: 0.2, position: base.position)
         ball.runAction(move)
+        let delay = CCActionDelay(duration: 0.3)
+        let hideBall = CCActionCallBlock(block: {self.ball.visible = false})
+        let hideBase = CCActionCallBlock(block: {self.base.visible = false})
+        runAction(CCActionSequence(array: [delay, hideBall, hideBase]))
     }
     
 }
