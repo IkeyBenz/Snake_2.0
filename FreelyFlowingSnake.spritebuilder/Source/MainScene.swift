@@ -9,6 +9,8 @@ class MainScene: CCNode {
     let screenHeight = CCDirector.sharedDirector().viewSize().height
     
     let fruitPiece = CCBReader.load("Piece")
+    weak var background: CCNodeGradient!
+    weak var screenFollowNode: CCNode!
     weak var ball: CCSprite!
     weak var base: CCSprite!
     
@@ -18,7 +20,8 @@ class MainScene: CCNode {
         fruitPiece.position = ccp(CGFloat(arc4random_uniform(UInt32(screenWidth))), CGFloat(arc4random_uniform(UInt32(screenHeight))))
         addChild(fruitPiece)
         schedule("makeSnakeMove", interval: 0.1)
-        
+        viewDidResizeTo(CGSize(width: 700, height: 1300))
+        followSnake()
     }
     override func update(delta: CCTime) {
         snakeAteFruit()
@@ -46,6 +49,7 @@ class MainScene: CCNode {
         newPiece.rotation = pieceRotation
         removeChild(lastPiece)
         pieceArray.removeAtIndex(pieceArray.indexOf(lastPiece)!)
+        moveScreenFollowNode(newPosition)
         addChild(newPiece)
         pieceArray.insert(newPiece, atIndex: 0)
     }
@@ -61,6 +65,14 @@ class MainScene: CCNode {
             addSnakePiece()
             fruitPiece.position = ccp(CGFloat(arc4random_uniform(UInt32(screenWidth))), CGFloat(arc4random_uniform(UInt32(screenHeight))))
         }
+    }
+    func followSnake() {
+        let follow = CCActionFollow(target: screenFollowNode)
+        runAction(follow)
+    }
+    func moveScreenFollowNode(position: CGPoint) {
+        let move = CCActionMoveTo(duration: 0.1, position: position)
+        screenFollowNode.runAction(move)
     }
     override func touchBegan(touch: CCTouch!, withEvent event: CCTouchEvent!) {
         base.position = touch.locationInWorld()
