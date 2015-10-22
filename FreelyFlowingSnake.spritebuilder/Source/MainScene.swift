@@ -11,6 +11,7 @@ class MainScene: CCNode {
     let fruitPiece = CCBReader.load("Piece")
     weak var background: CCNodeGradient!
     weak var screenFollowNode: CCNode!
+    weak var gameoverLabel: CCLabelTTF!
     weak var ball: CCSprite!
     weak var base: CCSprite!
     
@@ -20,11 +21,12 @@ class MainScene: CCNode {
         fruitPiece.position = ccp(CGFloat(arc4random_uniform(UInt32(screenWidth))), CGFloat(arc4random_uniform(UInt32(screenHeight))))
         addChild(fruitPiece)
         schedule("makeSnakeMove", interval: 0.1)
-        viewDidResizeTo(CGSize(width: 700, height: 1300))
-        followSnake()
+        //        viewDidResizeTo(CGSize(width: 700, height: 1300))
+        //        followSnake()
     }
     override func update(delta: CCTime) {
         snakeAteFruit()
+       // detectGameover()
     }
     
     func loadInitialPiece() {
@@ -47,9 +49,9 @@ class MainScene: CCNode {
         let newPosition = findNewPosition(pieceArray[0].position)
         newPiece.position = newPosition
         newPiece.rotation = pieceRotation
+
         removeChild(lastPiece)
         pieceArray.removeAtIndex(pieceArray.indexOf(lastPiece)!)
-        moveScreenFollowNode(newPosition)
         addChild(newPiece)
         pieceArray.insert(newPiece, atIndex: 0)
     }
@@ -57,6 +59,11 @@ class MainScene: CCNode {
         let newPiece = CCBReader.load("Piece")
         newPiece.position = findNewPosition(pieceArray[0].position)
         newPiece.rotation = pieceRotation
+//        if newPiece.rotation > pieceArray[0].rotation {
+//            newPiece.anchorPoint = ccp(0.0, 0.0)
+//        } else {
+//            newPiece.anchorPoint = ccp(1.0, 0.0)
+//        }
         pieceArray.insert(newPiece, atIndex: 0)
         addChild(newPiece)
     }
@@ -66,13 +73,27 @@ class MainScene: CCNode {
             fruitPiece.position = ccp(CGFloat(arc4random_uniform(UInt32(screenWidth))), CGFloat(arc4random_uniform(UInt32(screenHeight))))
         }
     }
-    func followSnake() {
-        let follow = CCActionFollow(target: screenFollowNode)
-        runAction(follow)
-    }
-    func moveScreenFollowNode(position: CGPoint) {
-        let move = CCActionMoveTo(duration: 0.1, position: position)
-        screenFollowNode.runAction(move)
+    //    func followSnake() {
+    //        let follow = CCActionFollow(target: screenFollowNode)
+    //        runAction(follow)
+    //    }
+    //    func moveScreenFollowNode(position: CGPoint) {
+    //        let move = CCActionMoveTo(duration: 0.1, position: position)
+    //        screenFollowNode.runAction(move)
+    //    }
+    func detectGameover() {
+        for piece in pieceArray {
+            if piece != pieceArray[0] && piece != pieceArray[1] && piece != pieceArray[2] {
+                if CGRectIntersectsRect(pieceArray[0].boundingBox(), piece.boundingBox()) {
+                    unschedule("makeSnakeMove")
+                    gameoverLabel.visible = true
+                    let delay = CCActionDelay(duration: 1.5)
+                    let restart = CCActionCallBlock(block: {CCDirector.sharedDirector().presentScene(CCBReader.loadAsScene("MainScene"))})
+                    runAction(CCActionSequence(array: [delay, restart]))
+                }
+            }
+            
+        }
     }
     override func touchBegan(touch: CCTouch!, withEvent event: CCTouchEvent!) {
         base.position = touch.locationInWorld()
