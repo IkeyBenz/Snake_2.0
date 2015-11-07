@@ -105,5 +105,38 @@ class MainScene: CCNode {
         
     }
 
+//    override func touchBegan(touch: CCTouch!, withEvent event: CCTouchEvent!) {
+//        base.position = touch.locationInWorld()
+//        ball.position = touch.locationInWorld()
+//        base.visible = true
+//        ball.visible = true
+//    }
+//    override func touchMoved(touch: CCTouch!, withEvent event: CCTouchEvent!) {
+//        let location = touch.locationInNode(self)
+//        let v = CGVector(dx: location.x - base.position.x, dy: location.y - base.position.y)
+//        let angle = atan2(v.dy, v.dx)
+//        let degrees = angle * CGFloat(180 / M_PI)
+//        pieceRotation = -Float(degrees + 180)
+//        desiredRotation = Float(angle + 3.14159)
+//        
+//        let length: CGFloat = base.boundingBox().height / 2
+//        let xDist: CGFloat = sin(angle - 1.57079633) * length
+//        let yDist: CGFloat = cos(angle - 1.57079633) * length
+//        
+//        if CGRectContainsPoint(base.boundingBox(), location) {
+//            ball.position = location
+//        } else {
+//            ball.position = ccp(base.position.x - xDist, base.position.y + yDist)
+//        }
+//        
+//    }
+//    override func touchEnded(touch: CCTouch!, withEvent event: CCTouchEvent!) {
+//        let move = CCActionMoveTo(duration: 0.2, position: base.position)
+//        ball.runAction(move)
+//        let delay = CCActionDelay(duration: 0.3)
+//        let hideBall = CCActionCallBlock(block: {self.ball.visible = false})
+//        let hideBase = CCActionCallBlock(block: {self.base.visible = false})
+//        runAction(CCActionSequence(array: [delay, hideBall, hideBase]))
+//    }
     
 }
