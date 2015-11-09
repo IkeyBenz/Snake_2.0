@@ -2,14 +2,9 @@ import Foundation
 
 class MainScene: CCNode {
     
-    enum Direction {
-        case Right, Left, Straight
-    }
-    
     var pieceArray: [CCNode] = []
     var desiredRotation: Float = 3.14159
     var pieceRotation: Float = 130
-    var snakeDirection: Direction = .Straight
     
     let screenWidth = CCDirector.sharedDirector().viewSize().width
     let screenHeight = CCDirector.sharedDirector().viewSize().height
@@ -21,6 +16,13 @@ class MainScene: CCNode {
     weak var ball: CCSprite!
     weak var base: CCSprite!
     weak var slider: CCSlider!
+    weak var scoreLabel: CCLabelTTF!
+    
+    var score = 0 {
+        didSet {
+            scoreLabel.string = "Score: \(score)"
+        }
+    }
     
     func didLoadFromCCB() {
         loadInitialPiece()
@@ -32,7 +34,7 @@ class MainScene: CCNode {
 
     }
     override func update(delta: CCTime) {
-        snakeAteFruit()
+        checkIfSnakeAteFruit()
         detectGameover()
         updateSnakeRotation()
 
@@ -80,13 +82,14 @@ class MainScene: CCNode {
         pieceArray.insert(newPiece, atIndex: 0)
     }
     func addSnakePiece() {
+        score++
         let newPiece = CCBReader.load("Piece")
         newPiece.position = findNewPosition(pieceArray[0].position)
         newPiece.rotation = pieceRotation
         pieceArray.insert(newPiece, atIndex: 0)
         addChild(newPiece)
     }
-    func snakeAteFruit() {
+    func checkIfSnakeAteFruit() {
         if CGRectIntersectsRect(pieceArray[0].boundingBox(), fruitPiece.boundingBox()) {
             addSnakePiece()
             moveFruitPiece()
@@ -99,7 +102,6 @@ class MainScene: CCNode {
                 moveFruitPiece()
             }
         }
-
     }
     
     func detectGameover() {
@@ -113,7 +115,6 @@ class MainScene: CCNode {
                     runAction(CCActionSequence(array: [delay, restart]))
                 }
             }
-            
         }
     }
     
@@ -125,6 +126,9 @@ class MainScene: CCNode {
         let addedRotationInDegrees = (slider.sliderValue * 30) - 15
         pieceRotation = pieceArray[0].rotation + addedRotationInDegrees
         desiredRotation = pieceRotation / Float(180 / M_PI)
+        
+    }
+    func adjustJoyStickRotation() {
         
     }
 
