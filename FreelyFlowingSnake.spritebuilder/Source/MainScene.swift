@@ -118,6 +118,7 @@ class MainScene: CCNode {
         }
     }
     
+    
     func sliderControl() {
         slider.sliderValue = 0.5
     }
@@ -126,9 +127,6 @@ class MainScene: CCNode {
         let addedRotationInDegrees = (slider.sliderValue * 30) - 15
         pieceRotation = pieceArray[0].rotation + addedRotationInDegrees
         desiredRotation = pieceRotation / Float(180 / M_PI)
-        
-    }
-    func adjustJoyStickRotation() {
         
     }
 
