@@ -56,13 +56,13 @@ class MainScene: CCNode {
         newPosition = ccp(CGFloat(Float(currentPosition.x) - x), CGFloat(Float(currentPosition.y) + y))
         
         if newPosition.x <= -15 {
-            newPosition.x = CCDirector.sharedDirector().viewSize().width
+            newPosition.x = CCDirector.sharedDirector().viewSize().width + 10
         } else if newPosition.x >= CCDirector.sharedDirector().viewSize().width + 15 {
-            newPosition.x = 0
+            newPosition.x = -10
         } else if newPosition.y <= -15 {
             newPosition.y = CCDirector.sharedDirector().viewSize().height
         } else if newPosition.y >= CCDirector.sharedDirector().viewSize().height + 15 {
-            newPosition.y = 0
+            newPosition.y = -10
         }
         
         return newPosition
@@ -139,17 +139,24 @@ class MainScene: CCNode {
         ball.visible = true
     }
     override func touchMoved(touch: CCTouch!, withEvent event: CCTouchEvent!) {
+        // Creates a vector between touchLocation and center of joystick base.
         let location = touch.locationInNode(self)
         let v = CGVector(dx: location.x - base.position.x, dy: location.y - base.position.y)
+        
+        // Using the vector, we determine the angle of which the joystick is pointing. (Swift works in radians)
         let angle = atan2(v.dy, v.dx)
         let degrees = angle * CGFloat(180 / M_PI)
+        
         pieceRotation = -Float(degrees + 180)
         desiredRotation = Float(angle + 3.14159)
         
+        // Uses touch location to determine where the ball should be positioned relative to the center of the base.
         let length: CGFloat = base.boundingBox().height / 2
         let xDist: CGFloat = sin(angle - 1.57079633) * length
         let yDist: CGFloat = cos(angle - 1.57079633) * length
         
+        // When ball is inside the base frame, let ball follow touch.
+        // Else, ball will circle around the edges of base frame, based on touch position relative to the center of the base.
         if CGRectContainsPoint(base.boundingBox(), location) {
             ball.position = location
         } else {
