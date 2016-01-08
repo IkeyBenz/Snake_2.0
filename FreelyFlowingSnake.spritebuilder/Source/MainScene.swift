@@ -5,9 +5,7 @@ class MainScene: CCNode {
     var pieceArray: [CCNode] = []
     var desiredRotation: Float = 3.14159
     var pieceRotation: Float = 130
-    
-    let screenWidth = CCDirector.sharedDirector().viewSize().width
-    let screenHeight = CCDirector.sharedDirector().viewSize().height
+    var gameover: Bool = false
     
     let fruitPiece = CCBReader.load("Piece")
     weak var background: CCNodeGradient!
@@ -17,6 +15,7 @@ class MainScene: CCNode {
     weak var base: CCSprite!
     weak var slider: CCSlider!
     weak var scoreLabel: CCLabelTTF!
+    weak var snakeLand: CCNodeColor!
     
     var score = 0 {
         didSet {
@@ -27,23 +26,29 @@ class MainScene: CCNode {
     func didLoadFromCCB() {
         loadInitialPiece()
         userInteractionEnabled = true
-        fruitPiece.position = ccp(CGFloat(arc4random_uniform(UInt32(screenWidth))), CGFloat(arc4random_uniform(UInt32(screenHeight))))
-        addChild(fruitPiece)
+        // fruitPiece.position = ccp(CGFloat(arc4random_uniform(UInt32(snakeLand.boundingBox().width))), CGFloat(arc4random_uniform(UInt32(snakeLand.boundingBox().height))))
+        snakeLand.addChild(fruitPiece)
         slider.sliderValue = 0.5
         schedule("makeSnakeMove", interval: 0.05)
-
+        let followSnake = CCActionFollow(target: screenFollowNode, worldBoundary: self.boundingBox())
+        //snakeLand.runAction(followSnake)
+        
+        
     }
     override func update(delta: CCTime) {
         checkIfSnakeAteFruit()
-        detectGameover()
+        if !gameover {
+            detectGameover()
+        }
         updateSnakeRotation()
-
+        
     }
     
     func loadInitialPiece() {
         let piece = CCBReader.load("Piece")
-        piece.position = ccp(200, 200)
-        addChild(piece)
+        snakeLand.addChild(piece)
+        piece.position = ccp(0,0)
+        screenFollowNode.position = piece.position
         pieceArray.insert(piece, atIndex: 0)
     }
     func findNewPosition(currentPosition: CGPoint) -> CGPoint {
@@ -55,13 +60,13 @@ class MainScene: CCNode {
         
         newPosition = ccp(CGFloat(Float(currentPosition.x) - x), CGFloat(Float(currentPosition.y) + y))
         
-        if newPosition.x <= -15 {
-            newPosition.x = CCDirector.sharedDirector().viewSize().width + 10
-        } else if newPosition.x >= CCDirector.sharedDirector().viewSize().width + 15 {
+        if newPosition.x <= -10 {
+            newPosition.x = snakeLand.boundingBox().width + 10
+        } else if newPosition.x >= snakeLand.boundingBox().width + 10 {
             newPosition.x = -10
-        } else if newPosition.y <= -15 {
-            newPosition.y = CCDirector.sharedDirector().viewSize().height
-        } else if newPosition.y >= CCDirector.sharedDirector().viewSize().height + 15 {
+        } else if newPosition.y <= -10 {
+            newPosition.y = snakeLand.boundingBox().height
+        } else if newPosition.y >= snakeLand.boundingBox().height + 10 {
             newPosition.y = -10
         }
         
@@ -71,15 +76,20 @@ class MainScene: CCNode {
         let lastPiece: CCNode = pieceArray[pieceArray.count - 1]
         let newPiece = CCBReader.load("Piece")
         let newPosition = findNewPosition(pieceArray[0].position)
-        newPiece.position = newPosition
         newPiece.rotation = pieceRotation
+        newPiece.position = newPosition
         
-        removeChild(lastPiece)
+        
+        snakeLand.removeChild(lastPiece)
         pieceArray.removeAtIndex(pieceArray.indexOf(lastPiece)!)
-
-
-        addChild(newPiece)
+        
+        
+        snakeLand.addChild(newPiece)
         pieceArray.insert(newPiece, atIndex: 0)
+        
+        let move = CCActionMoveTo(duration: 0.05, position: newPosition)
+        screenFollowNode.runAction(move)
+        
     }
     func addSnakePiece() {
         score++
@@ -87,7 +97,7 @@ class MainScene: CCNode {
         newPiece.position = findNewPosition(pieceArray[0].position)
         newPiece.rotation = pieceRotation
         pieceArray.insert(newPiece, atIndex: 0)
-        addChild(newPiece)
+        snakeLand.addChild(newPiece)
     }
     func checkIfSnakeAteFruit() {
         if CGRectIntersectsRect(pieceArray[0].boundingBox(), fruitPiece.boundingBox()) {
@@ -96,24 +106,27 @@ class MainScene: CCNode {
         }
     }
     func moveFruitPiece() {
-        fruitPiece.position = ccp(CGFloat(arc4random_uniform(UInt32(screenWidth))), CGFloat(arc4random_uniform(UInt32(screenHeight))))
-        for piece in pieceArray {
-            if CGRectContainsRect(piece.boundingBox(), fruitPiece.boundingBox()) {
-                moveFruitPiece()
-            }
-        }
+       // fruitPiece.position = ccp(CGFloat(arc4random_uniform(UInt32(snakeLand.boundingBox().width))), CGFloat(arc4random_uniform(UInt32(snakeLand.boundingBox().height))))
+//        for piece in pieceArray {
+//            if CGRectContainsRect(piece.boundingBox(), fruitPiece.boundingBox()) {
+//                moveFruitPiece()
+//            }
+//        }
     }
     
     func detectGameover() {
+        
         for piece in pieceArray {
             if piece != pieceArray[0] && piece != pieceArray[1] && piece != pieceArray[2] && piece != pieceArray[3] {
                 if CGRectIntersectsRect(pieceArray[0].boundingBox(), piece.boundingBox()) {
+                    gameover = true
                     unschedule("makeSnakeMove")
                     gameoverLabel.visible = true
                     let delay = CCActionDelay(duration: 1.5)
                     let restart = CCActionCallBlock(block: {CCDirector.sharedDirector().presentScene(CCBReader.loadAsScene("MainScene"))})
                     runAction(CCActionSequence(array: [delay, restart]))
                 }
+                
             }
         }
     }
@@ -131,7 +144,7 @@ class MainScene: CCNode {
     func adjustJoyStickRotation() {
         
     }
-
+    
     override func touchBegan(touch: CCTouch!, withEvent event: CCTouchEvent!) {
         base.position = touch.locationInWorld()
         ball.position = touch.locationInWorld()
@@ -157,11 +170,11 @@ class MainScene: CCNode {
         
         // When ball is inside the base frame, let ball follow touch.
         // Else, ball will circle around the edges of base frame, based on touch position relative to the center of the base.
-        if CGRectContainsPoint(base.boundingBox(), location) {
-            ball.position = location
-        } else {
+//        if CGRectContainsPoint(base.boundingBox(), location) {
+//            ball.position = location
+//        } else {
             ball.position = ccp(base.position.x - xDist, base.position.y + yDist)
-        }
+//        }
         
     }
     override func touchEnded(touch: CCTouch!, withEvent event: CCTouchEvent!) {
